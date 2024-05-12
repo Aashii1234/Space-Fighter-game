@@ -1,0 +1,119 @@
+import pygame
+import random
+import math
+from pygame import mixer
+mixer.init()
+
+pygame.init()
+mixer.music.load('bgm.wav')
+mixer.music.play(-1)
+
+screen=pygame.display.set_mode((800,600))
+pygame.display.set_caption('Space Fighter Game')
+icon=pygame.image.load('icon.png')
+pygame.display.set_icon(icon)
+background=pygame.image.load('background1.jpg')
+spaceshipimg=pygame.image.load('spaceship.png')
+alienimg=[]
+alienx=[]
+alieny=[]
+alienspeedx=[]
+alienspeedy=[]
+
+
+no_of_aliens=6
+
+
+for i in range(no_of_aliens):
+    alienimg.append(pygame.image.load('enemy.png'))
+    alienx.append(random.randint(0,736))
+    alieny.append(random.randint(30,150))
+    alienspeedx.append(-0.3)
+    alienspeedy.append(20)
+
+
+bulletimg=pygame.image.load('bullet2.png')
+check=False
+bulletx=386
+bullety=490
+spaceshipx=370
+spaceshipy=510
+changeX=0
+running=True
+score=0
+font=pygame.font.SysFont('Arial',32,'bold')
+def score_text():
+    img=font.render(f'Score : {score}',True,'white')
+    screen.blit(img,(10,10))
+font_gameover=pygame.font.SysFont('Arial',64,'bold')
+def gameover_text():
+    img_gameover=font.render('GAME OVER',True,'white')
+    screen.blit(img_gameover,(300,250))
+
+while running:
+    screen.blit(background,(0,0))
+    for event in pygame.event.get():
+        if event.type==pygame.QUIT:
+            running=False
+        if event.type==pygame.KEYDOWN:
+            if event.key==pygame.K_LEFT:
+                changeX=-0.5
+            if event.key==pygame.K_RIGHT:
+                changeX=0.5
+            if event.key==pygame.K_SPACE:
+
+                if check is False:
+                   # bullet = mixer.Sound('laser.wav')
+                    #bullet.play()
+                    check=True
+                    bulletx=spaceshipx+16
+        if event.type==pygame.KEYUP:
+            changeX=0
+    spaceshipx += changeX
+    if spaceshipx <= 0:
+        spaceshipx=0
+    elif spaceshipx>=736:
+        spaceshipx=736
+    for i in range(no_of_aliens):
+        if alieny[i] > spaceshipy - 64 and alieny[i] < spaceshipy + 64:
+            if alienx[i] > spaceshipx and alienx[i] < spaceshipx + 64 or alienx[i] + 64 > spaceshipx and alienx[i] + 64 < spaceshipx + 64:  # Check if alien overlaps with spaceship horizontally
+                for j in range(no_of_aliens):
+                    alieny[j] = 2000
+                gameover_text()
+                pygame.display.update()  # Update the display to show the game over text
+                pygame.time.delay(5000)  #pause the game for 5 seconds before exiting
+                running=False
+                break
+
+        alienx[i] += alienspeedx[i]
+        if alienx[i] <= 0:
+            alienspeedx[i] =0.2
+            alieny[i] += alienspeedy[i]
+        if alienx[i] >= 736:
+            alienspeedx[i] = -0.2
+            alieny[i] += alienspeedy[i]
+
+        distance = math.sqrt(math.pow(bulletx - alienx[i], 2) + math.pow(bullety - alieny[i], 2))
+        if distance < 27:
+
+            explosion = mixer.Sound('explosion.wav')
+            explosion.play()
+            bullety = 480
+            check = False
+            alienx[i] = random.randint(0, 736)
+            alieny[i] = random.randint(30, 150)
+            score += 1
+        screen.blit(alienimg[i], (alienx[i], alieny[i]))
+
+    if bullety<=0:
+        bullety=480
+        check=False
+
+    if check is True:
+        screen.blit(bulletimg, (bulletx,bullety))
+        bullety-=0.5
+    screen.blit(spaceshipimg, (spaceshipx,spaceshipy))
+
+    score_text()
+
+    pygame.display.update()
